@@ -1,12 +1,12 @@
-# Human Emotion Detection System 🧠🎭
+# Human Emotion Detection System
 
 A state-of-the-art multimodal emotion recognition pipeline designed to detect human emotions from video, audio, and text inputs. This system processes complex multimodal data streams, fuses them intelligently, and predicts emotional states with high accuracy.
 
-## 🚀 Overview
+##  Overview
 
 This repository contains an end-to-end Machine Learning pipeline that trains, tunes, and exports a multimodal emotion detection model. Built with PyTorch and HuggingFace Transformers, the system leverages large language models (LLMs) alongside robust vision and audio encoders to achieve comprehensive contextual understanding of human expressions.
 
-## 🏗️ Architecture (Multimodal Fusion)
+## Architecture (Multimodal Fusion)
 
 The core architecture (`pipeline/model.py`) relies on a robust multimodal fusion strategy:
 
@@ -16,7 +16,7 @@ The core architecture (`pipeline/model.py`) relies on a robust multimodal fusion
 4. **Multimodal Fusion (TA-AVN):** A Text-Attended Audio-Visual Network where text tokens dynamically attend to concatenated audio and video representations.
 5. **Reasoning & Classification:** Refined via **MER-ML(SE)** (Squeeze-Excitation gating) and a 4-Layer Transformer **Reasoner**, outputting the final emotion classification probabilities.
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 ├── models/             # Downloaded backbone weights (Llama-3.2-3B, r3d_18)
@@ -35,7 +35,7 @@ The core architecture (`pipeline/model.py`) relies on a robust multimodal fusion
 └── runs/               # Checkpoints, logs, and exported bundles
 ```
 
-## ⚙️ Installation & Setup
+##  Installation & Setup
 
 1. **Clone the repository:**
    ```bash
@@ -57,7 +57,7 @@ The core architecture (`pipeline/model.py`) relies on a robust multimodal fusion
    bash scripts/download_models.sh
    ```
 
-## 🏃‍♂️ Running the Pipeline
+##  Running the Pipeline
 
 The project provides a fully automated pipeline (`pipeline/run_all.sh`) that takes care of pre-flight checks, tuning, training, and exporting. 
 
@@ -72,6 +72,6 @@ qsub launch/submit.pbs
 # Check the launch/README.md for more HPC details.
 ```
 
-## 📦 Output & Export
+##  Output & Export
 
 Once Stage 4 (`04_export.py`) is complete, a fully standalone deployment bundle is created in `runs/<timestamp>/deploy/`. This bundle contains the optimized model weights, tokenizers, and configuration files ready for production deployment.
