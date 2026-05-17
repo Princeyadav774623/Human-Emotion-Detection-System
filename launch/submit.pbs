@@ -1,0 +1,73 @@
+#!/bin/bash
+# ============================================================
+#  submit.pbs — Submit the full pipeline as a single PBS job.
+#
+#  Usage (from a login node):
+#      cd ~/meld_emotion
+#      qsub launch/submit.pbs
+#
+#  Then disconnect. The pipeline runs unattended.
+#  Monitor with:
+#      qstat -u $USER
+#      tail -f ~/meld_emotion/logs/pipeline_*.log
+#
+#  If walltime is hit mid-tuning or mid-training, just resubmit —
+#  every stage is resumable from its run_dir.
+# ============================================================
+#PBS -N meld_pipeline
+#PBS -l select=1:ncpus=16:ngpus=1:mem=96gb
+#PBS -l walltime=48:00:00
+#PBS -j oe
+#PBS -o logs/pbs_pipeline.log
+#PBS -m abe                       # email on abort/begin/end
+#PBS -V                           # export your env (HF_TOKEN etc.)
+
+set -euo pipefail
+
+# --- environment ---
+PROJECT_DIR="${MELD_PROJECT:-$HOME/meld_emotion}"
+cd "$PROJECT_DIR"
+mkdir -p logs
+
+if [ ! -d venv ]; then
+    echo "ERROR: venv/ not found in $PROJECT_DIR"
+    echo "Create it on the login node first: python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+    exit 2
+fi
+source venv/bin/activate
+
+# --- offline mode (compute nodes have no internet) ---
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+export HF_HUB_DISABLE_TELEMETRY=1
+export TOKENIZERS_PARALLELISM=false
+export OMP_NUM_THREADS=8
+export CUDA_VISIBLE_DEVICES=0
+
+# torch hub: copy r3d_18 into a project-local cache so the compute node
+# doesn't need to share ~/.cache with the login node
+export TORCH_HOME="$PROJECT_DIR/.torch_cache"
+mkdir -p "$TORCH_HOME/hub/checkpoints"
+if [ -f "$PROJECT_DIR/models/r3d_18-b3b3357e.pth" ]; then
+    cp -u "$PROJECT_DIR/models/r3d_18-b3b3357e.pth" \
+          "$TORCH_HOME/hub/checkpoints/" 2>/dev/null || true
+fi
+
+# --- header ---
+ts=$(date +%Y%m%d_%H%M%S)
+LOG="logs/pipeline_${ts}.log"
+exec > >(tee -a "$LOG") 2>&1
+
+echo "============================================================"
+echo "  MELD pipeline — PBS job ${PBS_JOBID:-(local)}"
+echo "  $(date)  host=$(hostname)"
+echo "  user=$USER  project=$PROJECT_DIR"
+nvidia-smi --query-gpu=name,memory.total --format=csv | head -2
+echo "============================================================"
+
+# --- run ---
+bash pipeline/run_all.sh
+
+echo "============================================================"
+echo "  PBS job complete: $(date)"
+echo "============================================================"

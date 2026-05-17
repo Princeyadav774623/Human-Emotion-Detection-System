@@ -1,0 +1,38 @@
+#!/bin/bash
+#PBS -N meld_emotion
+#PBS -l select=1:ncpus=16:ngpus=1:mem=64gb
+#PBS -l walltime=12:00:00
+#PBS -j oe
+#PBS -o logs/train_$PBS_JOBID.log
+
+set -euo pipefail
+
+cd "$HOME/meld_emotion"
+mkdir -p logs
+source venv/bin/activate
+
+# offline mode — compute nodes have no internet
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+export HF_HUB_DISABLE_TELEMETRY=1
+export TOKENIZERS_PARALLELISM=false
+
+# performance
+export OMP_NUM_THREADS=8
+export CUDA_VISIBLE_DEVICES=0
+
+# optional: point torch hub at the project-local backup
+export TORCH_HOME="$HOME/meld_emotion/.torch_cache"
+mkdir -p "$TORCH_HOME/hub/checkpoints"
+if [ ! -f "$TORCH_HOME/hub/checkpoints/r3d_18-b3b3357e.pth" ]; then
+    cp -u "$HOME/meld_emotion/models/r3d_18-b3b3357e.pth" \
+          "$TORCH_HOME/hub/checkpoints/" 2>/dev/null || true
+fi
+
+echo "Job started: $(date)"
+echo "Node: $(hostname)"
+nvidia-smi --query-gpu=name,memory.total --format=csv
+
+python scripts/train_h100.py
+
+echo "Job finished: $(date)"

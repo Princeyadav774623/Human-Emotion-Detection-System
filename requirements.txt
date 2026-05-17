@@ -1,0 +1,22 @@
+# Core
+torch>=2.3.0
+torchvision>=0.18.0
+torchaudio>=2.3.0          # audio path (mel + MFCC)
+numpy>=1.24
+scikit-learn>=1.3
+matplotlib>=3.7
+seaborn>=0.12
+tqdm
+
+# Transformers stack
+transformers>=4.45.0       # needed for Llama-3.2 support
+accelerate>=0.30.0
+bitsandbytes>=0.43.0
+peft>=0.11.0
+sentencepiece
+
+# Hyperparameter tuning
+optuna>=3.5.0
+
+# Video I/O (much faster than torchvision.io)
+decord>=0.6.0
